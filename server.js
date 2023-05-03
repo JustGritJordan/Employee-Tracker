@@ -9,7 +9,13 @@ const db = mysql.createConnection(
     database: 'employee_db'
   },
 );
-const options = [               //changed questoins to options
+db.connect(function (err){
+if(err) throw err;
+console.log("connected")
+inquire()
+
+})
+const options = [               
   {
     type: 'list',
     message: 'Please select what and option:',
@@ -29,9 +35,7 @@ const options = [               //changed questoins to options
     ]
   }
 ];
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Double check to see where else code will fuck up
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 const optionSetTwo = [
   {
     type: 'input',
@@ -52,7 +56,7 @@ const optionSetThree = [
   }
 
 ];
-inquire()
+
 function inquire() {
   inquirer
     .prompt(options)
@@ -86,6 +90,8 @@ function inquire() {
 // function to view all departments as a console table
 function viewDepartments() {
   db.query('SELECT * FROM department', function (err, results) {
+    if(err) throw err;
+    console.log("this is all deparments")
     console.table(results)
   })
 }
@@ -157,122 +163,3 @@ function updateEmployeeRole() {
       })
   })
 }
-// promise query to select all from the department table
-function departmentChoices() {
-  return db.promise().query('SELECT * FROM department')
-
-}
-// function to add roles
-function addRoles() {
-  departmentChoices().then(response => {
-    // mapping the response at index 0 to create the department choices
-    const dChoices = response[0].map(({ id, department_name }) => ({
-      name: department_name,
-      value: id
-    }))
-    // inquirer prompt that uses dChoices const created above
-    inquirer
-      .prompt([
-        {
-          type: 'input',
-          message: 'Input new role name:',
-          name: 'role'
-        },
-        {
-          type: 'input',
-          message: 'Input a salary:',
-          name: 'salary'
-        },
-        {
-          type: 'list',
-          message: 'Choose a department:',
-          name: 'departmentChoice',
-          choices: dChoices
-        }
-      ])
-      // creating the new role with the answers above.
-      .then(answer => {
-        let roleName = {
-          title: answer.role,
-          salary: answer.salary,
-          department_id: answer.departmentChoice,
-        }
-        // inserting the new role creating into the roles table
-        db.promise().query('INSERT INTO roles SET ?', roleName)
-          .then(() => {
-            console.log('successfully added role')
-            inquire()
-          })
-      })
-  }
-  )
-}
-// function to add an employee
-function addEmployee() {
-  inquirer
-    .prompt(optionSetTwo)
-    // used the answers object from the prompt to create variables for name
-    .then(answers => {
-      let firstName = answers.first;
-      let lastName = answers.last;
-      // db promise query that is mapped to create a title with an id for role choices
-      db.promise().query('SELECT * FROM roles').then(response => {
-        let roleChoices = response[0].map(({ id, title }) => ({
-          name: title,
-          value: id
-        }))
-        // inquirer prompt using the roleChoices variable
-        inquirer
-          .prompt({
-            type: 'list',
-            message: 'What is employees role?',
-            name: 'roleid',
-            choices: roleChoices
-          })
-          // promise query selects the employee table content and is mapped for the first and last name with id included
-          .then(response => {
-            let roleid = response.roleid
-            db.promise().query('SELECT * FROM employee').then(response => {
-              let managerChoices = response[0].map(({ id, first_name, last_name }) => ({
-                name: `${first_name} ${last_name}`,
-                value: id
-              }))
-              // added no manager with value null to the top of choices for manager
-              managerChoices.unshift({ name: 'none', value: null })
-              inquirer
-                .prompt({
-                  type: 'list',
-                  message: 'What is employees manager?',
-                  name: 'managerid',
-                  choices: managerChoices
-                })
-                // created the employee object with all the variables above so we can insert the object into the table
-                .then(response => {
-                  let employee = {
-                    first_name: firstName,
-                    last_name: lastName,
-                    role_id: roleid,
-                    manager_id: response.managerid
-                  }
-                  // inserts employee object into table
-                  db.promise().query('INSERT INTO employee SET ?', employee)
-                    .then(() => {
-                      console.log('successfully added employee')
-                    })
-                  .then(() => {
-                    inquire()
-                  })
-                })
-            })
-          })
-      })
-    })
-}
-// promise query that uses left join to create a table with grouping of department and budget of said department
-function viewBudget() {
-  return db.promise().query('SELECT department.id, department.department_name, SUM(roles.salary) AS utilized_budget FROM employee LEFT JOIN roles ON employee.role_id=roles.id LEFT JOIN department ON roles.department_id=department.id GROUP BY department.id, department.department_name')
-}
-
-
-
-

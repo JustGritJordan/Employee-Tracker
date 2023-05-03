@@ -4,10 +4,15 @@ INSERT INTO department
     (department_name)
 VALUES
     ('Sales'),
-    ('Engineering'),
+    ('Maintenance'),
+    ('Membership'),
 INSERT INTO roles
     (title, salary, department_id)
 VALUES
+  (supervisor, "100000", 1),
+  (associate, "60000", 2),
+  (jr associate, "40000", 3)
+ 
  INSERT INTO employee
     (id, first_name, last_name)
 VALUES

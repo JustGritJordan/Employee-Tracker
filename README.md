@@ -1,2 +1,18 @@
 # Employee-Tracker
- Command-line application to manage a company's employee database, using Node.js, Inquirer, and MySQL.
+
+## Description
+This is a MysqL application where users are able to view departments, delete employees, and adn information to a database.
+
+
+
+
+
+
+
+
+
+## License
+
+License.MIT
+
+---
